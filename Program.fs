@@ -4,6 +4,7 @@ open System.CommandLine
 open System.CommandLine.Parsing
 open System.IO
 open System.Reflection
+open System.Text.Json
 
 let hasOneOf (result: CommandResult) (symbols: seq<Symbol>) =
     let count =
@@ -14,6 +15,11 @@ let hasOneOf (result: CommandResult) (symbols: seq<Symbol>) =
 
 let readInputFromFile (filePath: FileInfo) = File.ReadAllText(filePath.FullName)
 
+let rec stringify (obj: obj) =
+    let options =  JsonSerializerOptions()
+    options.WriteIndented <- true
+    JsonSerializer.Serialize(obj, obj.GetType(), options)
+    
 let processDay day input =
     let dayModuleName = $"Day%02d{day}"
     let dayType = Assembly.GetExecutingAssembly().GetType(dayModuleName)
@@ -26,7 +32,7 @@ let processDay day input =
         if isNull solveMethod then
             printfn $"Solve method not found in %s{dayModuleName}"
         else
-            solveMethod.Invoke(null, [| input |]) |> ignore
+            solveMethod.Invoke(null, [| input |]) |> stringify |> printf "%s"
 
 let processArguments (day: int) (text: string) (file: FileInfo) =
     let input = if isNull file then text else readInputFromFile file 

@@ -2,6 +2,8 @@ module Day01
 
 open System
 
+type CharPosition = { Character: char; Index: int }
+
 // A map of all word digits to pure digits
 let wordDigitMap = Map [
     ("one", '1');
@@ -18,9 +20,9 @@ let wordDigitMap = Map [
 // Get all pure digits in a string with their positions
 let getPureDigitPositions (str: string) =
     str
-    |> Seq.mapi (fun i x -> (x, i))
-    |> Seq.filter (fun (x, _) -> Char.IsDigit x)
-
+    |> Seq.mapi (fun i x -> { Character = x; Index = i })
+    |> Seq.filter (fun charPosition -> Char.IsDigit charPosition.Character)
+ 
 // Find the indices of all instances of a word in a string
 let findAllIndices (str: string) (word: string) =
     let rec findFromIndex currentIndex =
@@ -40,34 +42,39 @@ let findAllIndices (str: string) (word: string) =
 // Get all word digits in a string with their positions
 let getWordDigitPositions str =
     wordDigitMap.Keys
-    |> Seq.collect (fun word -> findAllIndices str word |> Seq.map (fun index -> (wordDigitMap[word], index)))
+    |> Seq.collect (
+        fun word ->
+            findAllIndices str word
+            |> Seq.map (
+                fun index -> { Character = wordDigitMap[word]; Index = index}
+            )
+    )
 
 // Combine the first and last character and convert to an integer
 let combineFirstAndLastDigit digitPositions =
-    digitPositions
-    |> Seq.sortBy snd
-    |> Seq.map fst
-    |> (fun s -> [| Seq.head s; Seq.last s |] |> String |> int)
+    if Seq.length digitPositions = 0
+    then 0
+    else  
+        digitPositions
+        |> Seq.sortBy (fun x -> x.Index)
+        |> Seq.map (fun x -> x.Character)
+        |> (fun s -> [| Seq.head s; Seq.last s |] |> String |> int)
 
-// ENTRY POINT
+// Returns a sequence containing the solution to each part in order.
 let solve (input: string) =
-    let lines = input.Split "\n" |> Array.ofSeq
+    seq {
+        let lines = input.Split "\n" |> Array.ofSeq
 
-    let pureDigitsWithPositions = lines |> Seq.map getPureDigitPositions
-    
-    let badCalibrationTotal =
-        pureDigitsWithPositions
-        |> Seq.map combineFirstAndLastDigit
-        |> Seq.sum
+        let pureDigitsWithPositions = lines |> Seq.map getPureDigitPositions
+        
+        yield pureDigitsWithPositions
+            |> Seq.map combineFirstAndLastDigit
+            |> Seq.sum
 
-    printf $"Part 1: %d{badCalibrationTotal}\n"
-
-    let wordDigitsWithPositions = lines |> Seq.map getWordDigitPositions
-    
-    let goodCalibrationTotal =
-        Seq.zip pureDigitsWithPositions wordDigitsWithPositions
-        |> Seq.map (fun (s1, s2) -> Seq.concat [s1; s2])
-        |> Seq.map combineFirstAndLastDigit
-        |> Seq.sum
-
-    printf $"Part 2: %d{goodCalibrationTotal}\n"
+        let wordDigitsWithPositions = lines |> Seq.map getWordDigitPositions
+        
+        yield Seq.zip pureDigitsWithPositions wordDigitsWithPositions
+            |> Seq.map (fun (s1, s2) -> Seq.concat [s1; s2])
+            |> Seq.map combineFirstAndLastDigit
+            |> Seq.sum
+    }
