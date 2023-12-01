@@ -8,6 +8,7 @@
     <ItemGroup>
         <Content Include="README.md" />
         <Compile Include="Day00.fs" />
+        <Compile Include="Day01.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
