@@ -2,6 +2,7 @@
 
 open System.CommandLine
 open System.CommandLine.Parsing
+open System.Diagnostics
 open System.IO
 open System.Reflection
 open System.Text.Json
@@ -28,11 +29,17 @@ let processDay day input =
         printfn $"Day %d{day} module not implemented"
     else
         let solveMethod = dayType.GetMethod("solve")
-
+        
         if isNull solveMethod then
             printfn $"Solve method not found in %s{dayModuleName}"
         else
-            solveMethod.Invoke(null, [| input |]) |> stringify |> printf "%s"
+            let stopwatch = Stopwatch.StartNew()
+        
+            solveMethod.Invoke(null, [| input |]) |> stringify |> printf "%s\n"
+            
+            stopwatch.Stop()
+            let elapsed = stopwatch.Elapsed
+            printfn $"Time taken: %A{elapsed}"
 
 let processArguments (day: int) (text: string) (file: FileInfo) =
     let input = if isNull file then text else readInputFromFile file 
