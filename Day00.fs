@@ -1,3 +1,10 @@
 module Day00
 
-let solve (input: string) = [input]
+open System
+
+// Returns all lines of the input
+let solve (input: string) =
+    seq {
+        let lines = input.Split(Environment.NewLine)
+        yield lines
+    }
